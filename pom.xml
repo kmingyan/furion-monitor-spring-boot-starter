@@ -6,7 +6,7 @@
 
     <groupId>io.github.kmingyan</groupId>
     <artifactId>furion-monitor-spring-boot-starter</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
 
     <name>Furion Monitor Spring Boot Starter</name>
     <description>A Spring Boot starter for application monitoring with ByteBuddy instrumentation</description>
