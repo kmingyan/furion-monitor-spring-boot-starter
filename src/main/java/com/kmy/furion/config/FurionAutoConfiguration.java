@@ -1,5 +1,6 @@
 package com.kmy.furion.config;
 
+import com.kmy.furion.core.advice.AiDiagnosisService;
 import com.kmy.furion.core.advice.ExceptionMonitorService;
 import com.kmy.furion.core.advice.InvokeStatReporter;
 import com.kmy.furion.core.advice.SlowSqlMonitor;
@@ -52,5 +53,6 @@ public class FurionAutoConfiguration {
         ExceptionMonitorService.shutdown();
         InvokeStatReporter.shutdown();
         TraceLogMonitor.shutdown();
+        AiDiagnosisService.shutdown();
     }
 }

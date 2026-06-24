@@ -1,5 +1,6 @@
 package com.kmy.furion.utils;
 
+import com.kmy.furion.properties.FurionProperties;
 import org.apache.commons.logging.Log;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -75,6 +76,19 @@ public class SpringContextUtil implements ApplicationContextAware {
             case "FATAL": log.fatal(message, throwable); break;
             case "WARN":
             default:      log.warn(message, throwable);  break;
+        }
+    }
+
+
+    /**
+     * 获取配置文件中的属性
+     * @return
+     */
+    public static FurionProperties getProperties() {
+        try {
+            return SpringContextUtil.getBean(FurionProperties.class);
+        } catch (Exception e) {
+            return null;
         }
     }
 

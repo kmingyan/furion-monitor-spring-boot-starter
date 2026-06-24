@@ -41,6 +41,8 @@
         <bytebuddy.version>1.14.12</bytebuddy.version>
         <spring-boot.version>3.3.5</spring-boot.version>
         <slf4j.version>2.0.9</slf4j.version>
+        <cfr.version>0.152</cfr.version>
+        <javaparser.version>3.26.4</javaparser.version>
     </properties>
 
 
@@ -124,6 +126,19 @@
             <artifactId>jackson-databind</artifactId>
             <optional>true</optional>
         </dependency>
+
+        <dependency>
+            <groupId>org.benf</groupId>
+            <artifactId>cfr</artifactId>
+            <version>${cfr.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.javaparser</groupId>
+            <artifactId>javaparser-core</artifactId>
+            <version>${javaparser.version}</version>
+        </dependency>
+
 
     </dependencies>
 

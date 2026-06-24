@@ -3,6 +3,7 @@ package com.kmy.furion.core.agent;
 import java.lang.instrument.Instrumentation;
 import java.sql.Statement;
 
+import com.kmy.furion.core.advice.AiDiagnosisAdvice;
 import com.kmy.furion.core.advice.ExceptionMonitorAdvice;
 import com.kmy.furion.core.advice.InvokeStatAdvice;
 import com.kmy.furion.core.advice.SlowSqlJdbcAdvice;
@@ -25,6 +26,7 @@ public class FurionAgentInstaller {
     private static final String EXCEPTION_MONITOR_ANNOTATION = "com.kmy.furion.annotations.ExceptionMonitor";
     private static final String INVOKE_STAT_ANNOTATION = "com.kmy.furion.annotations.InvokeStat";
     private static final String TRACE_LOG_ANNOTATION = "com.kmy.furion.annotations.TraceLog";
+    private static final String AI_DIAGNOSIS_ANNOTATION = "com.kmy.furion.annotations.AiDiagnosis";
 
     private static volatile boolean installed = false;
 
@@ -60,6 +62,10 @@ public class FurionAgentInstaller {
                 AsmVisitorWrapper traceLogAdvice = Advice.to(TraceLogAdvice.class)
                         .on(ElementMatchers.isAnnotatedWith(
                                 ElementMatchers.named(TRACE_LOG_ANNOTATION)));
+
+                AsmVisitorWrapper aiDiagnosisAdvice = Advice.to(AiDiagnosisAdvice.class)
+                        .on(ElementMatchers.isAnnotatedWith(
+                                ElementMatchers.named(AI_DIAGNOSIS_ANNOTATION)));
 
                 // ========== AgentBuilder ==========
                 new AgentBuilder.Default()
@@ -113,6 +119,16 @@ public class FurionAgentInstaller {
                         )))
                         .transform((builder, typeDescription, classLoader, module, protectionDomain) ->
                                 builder.visit(traceLogAdvice))
+                        // --- 链6：@AiDiagnosis AI 诊断 ---
+                        .type(ElementMatchers.isAnnotatedWith(
+                                ElementMatchers.named(AI_DIAGNOSIS_ANNOTATION)
+                        ).or(ElementMatchers.declaresMethod(
+                                ElementMatchers.isAnnotatedWith(
+                                        ElementMatchers.named(AI_DIAGNOSIS_ANNOTATION)
+                                )
+                        )))
+                        .transform((builder, typeDescription, classLoader, module, protectionDomain) ->
+                                builder.visit(aiDiagnosisAdvice))
                         .installOn(instrumentation);
 
                 installed = true;
