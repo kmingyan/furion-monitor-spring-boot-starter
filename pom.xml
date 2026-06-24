@@ -177,6 +177,8 @@
                 <configuration>
                     <!-- 替换为你用于签名的 GPG Key ID (后8位或完整指纹) -->
                     <keyname>C54C120B</keyname>
+                    <executable>E:\gpgwin4\GnuPG\bin\gpg.exe</executable>
+                    <passphrase>${env.GPG_PASSPHRASE}</passphrase>
                     <!-- 防止交互式输入密码导致 CI/CD 卡死 -->
                     <gpgArguments>
                         <arg>--pinentry-mode</arg>
@@ -219,10 +221,10 @@
             <plugin>
                 <groupId>org.sonatype.central</groupId>
                 <artifactId>central-publishing-maven-plugin</artifactId>
-                <version>0.7.0</version> <!-- 建议使用最新稳定版 -->
+                <!-- ⭐️ 升级到最新版本，0.7.0 有 warnings 字段解析 bug -->
+                <version>0.8.0</version>
                 <extensions>true</extensions>
                 <configuration>
-                    <!-- ⚠️ 这里必须与 settings.xml 中的 <id> 完全一致 -->
                     <publishingServerId>k-maven-central</publishingServerId>
                 </configuration>
             </plugin>
