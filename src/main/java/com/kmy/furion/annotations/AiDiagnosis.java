@@ -21,10 +21,10 @@ public @interface AiDiagnosis {
 
     /**
      * 是否启用 AI 诊断（方法级开关）
-     * 设为 false 后该方法的异常仅输出 Phase 1 日志，不调用大模型
-     * 默认 true
+     * 设为 true 后该方法的异常仅输出 Phase 1 日志，不调用大模型
+     * 默认 false
      */
-    boolean enabled() default true;
+    boolean enabled() default false;
 
     /**
      * 是否记录方法入参
