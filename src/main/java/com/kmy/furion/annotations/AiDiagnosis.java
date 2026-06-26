@@ -8,11 +8,11 @@ import java.lang.annotation.Target;
 
 /**
  * AI 诊断注解
- * 标注在方法或类上，当方法抛出异常时，自动提取方法源码、入参信息，
- * 为后续调用大模型进行异常分析提供数据支持。
+ * 标注在方法或类上，当方法抛出异常时：
+ * - Phase 1（始终执行）：自动提取方法源码、入参、堆栈，输出格式化日志
+ * - Phase 2（需 enabled=true + 配置 apiKey）：调用大模型 API 分析异常原因，通过 AiDiagnosisResultHandler 回调诊断结果
  *
- * 当前版本（Phase 1）：仅打印方法内容和入参
- * 后续版本（Phase 2）：调用大模型 API 分析异常原因并推送诊断结果
+ * @author kmy
  */
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
