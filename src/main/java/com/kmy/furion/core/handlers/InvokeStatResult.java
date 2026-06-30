@@ -1,6 +1,7 @@
 package com.kmy.furion.core.handlers;
 
 import lombok.Data;
+import lombok.ToString;
 
 import java.util.List;
 
@@ -11,6 +12,7 @@ import java.util.List;
  * @Author: kmy
  */
 @Data
+@ToString
 public class InvokeStatResult {
 
     /**

@@ -1,6 +1,7 @@
 package com.kmy.furion.core.handlers;
 
 import lombok.Data;
+import lombok.ToString;
 
 /**
  * 异常监控结果
@@ -9,6 +10,7 @@ import lombok.Data;
  * @Author: kmy
  */
 @Data
+@ToString
 public class ExceptionMonitorResult {
 
     /**
