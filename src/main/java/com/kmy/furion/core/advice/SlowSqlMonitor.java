@@ -1,6 +1,8 @@
 package com.kmy.furion.core.advice;
 
 import com.kmy.furion.annotations.SlowSql;
+import com.kmy.furion.core.handlers.SlowSqlResult;
+import com.kmy.furion.core.handlers.SlowSqlResultHandler;
 import com.kmy.furion.properties.FurionProperties;
 import com.kmy.furion.utils.SpringContextUtil;
 import org.apache.commons.logging.Log;
@@ -197,6 +199,42 @@ public class SlowSqlMonitor {
             }
         }
         SpringContextUtil.log(log, logLevel, sb.toString());
+
+        // 回调宿主应用的 Handler
+        SlowSqlResultHandler handler = getHandler();
+        if (handler != null) {
+            try {
+                SlowSqlResult sqlResult = new SlowSqlResult();
+                sqlResult.setSql(truncateSql(sql));
+                sqlResult.setDurationMs(durationMs);
+                sqlResult.setThresholdMs(threshold);
+                sqlResult.setCallerClass(result.callerClass);
+                sqlResult.setCallerMethod(result.callerMethod);
+                sqlResult.setCallerLineNumber(result.callerLineNumber);
+                sqlResult.setStackTrace(buildStackTraceString(stackTrace));
+                handler.onResult(sqlResult);
+            } catch (Exception e) {
+                log.warn("[FURION-MONITOR] SlowSqlResultHandler callback failed: " + e.getMessage(), e);
+            }
+        }
+    }
+
+    private static String buildStackTraceString(StackTraceElement[] stackTrace) {
+        StringBuilder sb = new StringBuilder();
+        for (StackTraceElement element : stackTrace) {
+            if (!isFrameworkFrame(element.getClassName())) {
+                sb.append("at ").append(element).append('\n');
+            }
+        }
+        return sb.toString();
+    }
+
+    private static SlowSqlResultHandler getHandler() {
+        try {
+            return SpringContextUtil.getBean(SlowSqlResultHandler.class);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     /**

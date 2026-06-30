@@ -1,6 +1,8 @@
 package com.kmy.furion.core.advice;
 
 import com.kmy.furion.annotations.SlowStack;
+import com.kmy.furion.core.handlers.SlowStackResult;
+import com.kmy.furion.core.handlers.SlowStackResultHandler;
 import com.kmy.furion.properties.FurionProperties;
 import com.kmy.furion.utils.SpringContextUtil;
 import org.apache.commons.logging.Log;
@@ -147,6 +149,44 @@ public class SlowStackMonitor {
             }
         }
         SpringContextUtil.log(log, logLevel, sb.toString());
+
+        // 回调宿主应用的 Handler
+        SlowStackResultHandler handler = getHandler();
+        if (handler != null) {
+            try {
+                SlowStackResult result = new SlowStackResult();
+                result.setClassName(className);
+                result.setMethodName(methodName);
+                result.setDurationMs(durationMs);
+                result.setThresholdMs(threshold);
+                if (throwable != null) {
+                    result.setExceptionType(throwable.getClass().getName());
+                    result.setExceptionMessage(throwable.getMessage());
+                }
+                result.setStackTrace(buildStackTraceString(stackTrace));
+                handler.onResult(result);
+            } catch (Exception e) {
+                log.warn("[FURION-MONITOR] SlowStackResultHandler callback failed: " + e.getMessage(), e);
+            }
+        }
+    }
+
+    private static String buildStackTraceString(StackTraceElement[] stackTrace) {
+        StringBuilder sb = new StringBuilder();
+        for (StackTraceElement element : stackTrace) {
+            if (!isFrameworkFrame(element.getClassName())) {
+                sb.append("at ").append(element).append('\n');
+            }
+        }
+        return sb.toString();
+    }
+
+    private static SlowStackResultHandler getHandler() {
+        try {
+            return SpringContextUtil.getBean(SlowStackResultHandler.class);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private static class ThresholdEntry {

@@ -1,5 +1,7 @@
 package com.kmy.furion.core.advice;
 
+import com.kmy.furion.core.handlers.InvokeStatResult;
+import com.kmy.furion.core.handlers.InvokeStatResultHandler;
 import com.kmy.furion.properties.FurionProperties;
 import com.kmy.furion.utils.SpringContextUtil;
 import org.apache.commons.logging.Log;
@@ -7,6 +9,8 @@ import org.apache.commons.logging.LogFactory;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -68,6 +72,37 @@ public class InvokeStatReporter {
             });
 
             SpringContextUtil.log(log, logLevel, sb.toString());
+
+            // 回调宿主应用的 Handler
+            InvokeStatResultHandler handler = getHandler();
+            if (handler != null) {
+                try {
+                    InvokeStatResult statResult = new InvokeStatResult();
+                    List<InvokeStatResult.MethodStat> methodStats = new ArrayList<>(snapshots.size());
+                    snapshots.forEach((key, snapshot) -> {
+                        InvokeStatResult.MethodStat stat = new InvokeStatResult.MethodStat();
+                        int hashIdx = key.indexOf('#');
+                        if (hashIdx > 0) {
+                            stat.setClassName(key.substring(0, hashIdx));
+                            stat.setMethodName(key.substring(hashIdx + 1));
+                        } else {
+                            stat.setClassName(key);
+                            stat.setMethodName("");
+                        }
+                        stat.setCallCount(snapshot.count);
+                        stat.setAvgMs(snapshot.count > 0 ? snapshot.totalMs / snapshot.count : 0);
+                        stat.setP50Ms(snapshot.p50);
+                        stat.setP90Ms(snapshot.p90);
+                        stat.setP99Ms(snapshot.p99);
+                        stat.setMaxMs(snapshot.maxMs);
+                        methodStats.add(stat);
+                    });
+                    statResult.setMethodStats(methodStats);
+                    handler.onResult(statResult);
+                } catch (Exception e) {
+                    log.warn("[FURION-STAT] InvokeStatResultHandler callback failed: " + e.getMessage(), e);
+                }
+            }
         } catch (Throwable e) {
             log.warn("[Furion-Monitor] stat report error: " + e.getMessage());
         }
@@ -76,6 +111,14 @@ public class InvokeStatReporter {
     private static FurionProperties getProperties() {
         try {
             return SpringContextUtil.getBean(FurionProperties.class);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static InvokeStatResultHandler getHandler() {
+        try {
+            return SpringContextUtil.getBean(InvokeStatResultHandler.class);
         } catch (Exception e) {
             return null;
         }

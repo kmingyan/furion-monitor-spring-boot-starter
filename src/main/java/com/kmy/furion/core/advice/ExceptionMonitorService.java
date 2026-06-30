@@ -1,5 +1,7 @@
 package com.kmy.furion.core.advice;
 
+import com.kmy.furion.core.handlers.ExceptionMonitorResult;
+import com.kmy.furion.core.handlers.ExceptionMonitorResultHandler;
 import com.kmy.furion.properties.FurionProperties;
 import com.kmy.furion.utils.SpringContextUtil;
 import org.apache.commons.logging.Log;
@@ -122,6 +124,41 @@ public class ExceptionMonitorService {
         }
 
         SpringContextUtil.log(log, logLevel, sb.toString(), throwable);
+
+        // 回调宿主应用的 Handler
+        ExceptionMonitorResultHandler handler = getHandler();
+        if (handler != null) {
+            try {
+                ExceptionMonitorResult result = new ExceptionMonitorResult();
+                result.setClassName(declaringClass.getName());
+                result.setMethodName(methodName);
+                result.setArgs(argStrings);
+                result.setExceptionType(throwable.getClass().getName());
+                result.setExceptionMessage(throwable.getMessage());
+                result.setStackTrace(buildStackTraceString(stackTrace));
+                handler.onResult(result);
+            } catch (Exception e) {
+                log.warn("[FURION-MONITOR] ExceptionMonitorResultHandler callback failed: " + e.getMessage(), e);
+            }
+        }
+    }
+
+    private static String buildStackTraceString(StackTraceElement[] stackTrace) {
+        StringBuilder sb = new StringBuilder();
+        for (StackTraceElement element : stackTrace) {
+            if (!isFrameworkFrame(element.getClassName())) {
+                sb.append("at ").append(element).append('\n');
+            }
+        }
+        return sb.toString();
+    }
+
+    private static ExceptionMonitorResultHandler getHandler() {
+        try {
+            return SpringContextUtil.getBean(ExceptionMonitorResultHandler.class);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private static FurionProperties getProperties() {

@@ -3,6 +3,8 @@ package com.kmy.furion.core.advice;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kmy.furion.annotations.TraceLog;
+import com.kmy.furion.core.handlers.TraceLogResult;
+import com.kmy.furion.core.handlers.TraceLogResultHandler;
 import com.kmy.furion.properties.FurionProperties;
 import com.kmy.furion.utils.SpringContextUtil;
 import org.apache.commons.logging.Log;
@@ -199,6 +201,34 @@ public class TraceLogMonitor {
         }
 
         SpringContextUtil.log(log, logLevel, sb.toString());
+
+        // 回调宿主应用的 Handler
+        TraceLogResultHandler handler = getHandler();
+        if (handler != null) {
+            try {
+                TraceLogResult result = new TraceLogResult();
+                result.setClassName(declaringClass.getName());
+                result.setMethodName(methodName);
+                result.setDurationMs(durationMs);
+                result.setArgs(argStrings);
+                result.setReturnValue(resultString);
+                if (throwable != null) {
+                    result.setExceptionType(throwable.getClass().getName());
+                    result.setExceptionMessage(throwable.getMessage());
+                }
+                handler.onResult(result);
+            } catch (Exception e) {
+                log.warn("[FURION-TRACE] TraceLogResultHandler callback failed: " + e.getMessage(), e);
+            }
+        }
+    }
+
+    private static TraceLogResultHandler getHandler() {
+        try {
+            return SpringContextUtil.getBean(TraceLogResultHandler.class);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private static FurionProperties getProperties() {
